@@ -1,0 +1,397 @@
+---
+title: "San Clemente Island White Abalone Survey - 2019"
+author: "Kevin L. Stierhoff, Scott Mau, and Dave Murfin"
+date: '`r format(Sys.time(), format = "%F %T", tz = "GMT", usetz = TRUE)`'
+output:
+  bookdown::html_document2:
+    toc: yes
+    toc_float: yes
+  bookdown::pdf_document2:
+    toc: yes
+    includes:
+      in_header: yaml/header.tex
+  bookdown::word_document2:
+    reference_docx: template/report_template_Rmarkdown.docx
+    pandoc_args: [
+     "--filter", "yaml/pandoc_newpage_filter.R"
+     ]
+---
+
+```{r load-libraries-functions, error=FALSE, message=FALSE, warning=FALSE, echo=F}
+# Install and load pacman (library management package)
+if (!require("pacman")) install.packages("pacman")
+
+# Install and load required packages from CRAN ---------------------------------
+pacman::p_load(tidyverse,swfscMisc,reshape2,tcltk,lubridate,sp,rgeos,
+          knitr,maps,geosphere,Hmisc,ggrepel,png,cowplot,forecast,xts,
+          RSQLite,geoR,kableExtra,devtools,scatterpie,marmap,magick,
+          beepr,rnaturalearth,shadowtext,here,leaflet,leafem,htmltools,
+          leaflet.extras,maptools,mapview,photobiology,fs,plotly,
+          concaveman,DT,xml2,glue,lwgeom,DBI,odbc,bookdown,sf,
+          rworldmap,rworldxtra,data.table,stplanr,ggspatial)
+
+# Install and load required packages from Github -------------------------------
+# surveyR
+pacman::p_load_gh("kstierhoff/surveyR")
+pacman::p_load_gh("kstierhoff/atm")
+# rnaturalearth data
+pacman::p_load_gh("ropenscilabs/rnaturalearthdata")
+pacman::p_load_gh("ropenscilabs/rnaturalearthhires")
+
+# Define method of table generation (whether kable or xtable) for best formatting
+doc.type <- knitr::opts_knit$get('rmarkdown.pandoc.to')
+if (is.null(doc.type)) {doc.type <- "html"}
+```
+
+```{r knitr-options,echo=FALSE}
+# Set global knitr chunk options
+if (.Platform$OS.type == "unix") {
+  # Do not specify Cairo device for MacOS
+  knitr::opts_chunk$set(echo = F, warning = F, message = F,
+                        fig.align = 'center', dev = "png", dpi = 150)
+} else {
+  knitr::opts_chunk$set(echo = F, warning = F, message = F,
+                        fig.align = 'center', dev = "png", dpi = 150,
+                        dev.args = list(type = "cairo"))
+}
+
+# determine global knitr table format
+if (doc.type == "latex") {
+  knitr.format <- "latex"
+} else {
+  knitr.format <- "html" 
+}
+```
+
+# Mobilization
+December 09-December 20  
+
+Loaded gear on _Outer Limits_ beginning on Monday December 9th while dock side at Seaforth Landing. Remaining gear (tether reel, clump weight windlass, clump weights, etc.) were loaded by crane on December 10th at Driscoll Landing. Equipment set-up and integration finished in the evening of December 10th and _Outer Limits_ departed Seaforth Landing in Mission Bay at 2100.  
+
+Operations began early morning 0600 on December 11th on the SW side of San Clemente Island with fair weather.
+
+# Repair log
+ROV equipment issues encountered and item to address:
+
++ The main DC input connector to the power junction box is broken and needs replacement (connector ordered, DM).
++ The HD video would not connect at first.  It seems to be an issue in the termination of the main umbilical.  The fiber section of the Umbilical termination should secured the frame more delicately and the Umbilical should be re terminated when time permits.
++	The vertical axis (slider) of the remote joystick does not register in the control system software.  So there is not any control of the ROV vertrans from the remote joystick.  The windows joystick diagnostic tool responds fine to the remote joystick input.  Indicating an issue in the controls. Additionally, inside the control system GUI the vertical conponent of the AUX joystick was set to the wrong axis.
+
+# Transect Logs
+## Leg 1
+
+Departed Seaforth Landing at 05:00 (check; 9pm PST) on 11 December, and arrived at the north end of SHOBA at 14:15. Seas were calm and wind was light.  
+
+### Day 1 - San Clemente Island (December 11, 2019)  
+
+#### Transect 1 (19-345A) 
+**Start time:**  18:27  **End time:**  19:09  
+Pilot:K. Stierhoff  
+Location:  SHOBA (40-50 m)
+**Notes/observations:** Rocky Bottom with intermixed kelp.
+
+#### Transect 2 (19-345B)
+**Start time:** 18:10 **End time:** 18:39
+Pilot ** D. Murfin
+Location:  SHOBA (30-40 m)
+
+**Notes/observations:** Lots of Kelp,  Ended early ~ 700 meters do to kelp
+
+#### Transect 3 (19-345C) 
+**Start time:**  19:05 **End time:**  19:32  
+**Pilot:**   S. Mau  
+**Location:**  SHOBA (40-50 m)  
+**Notes/observations:**   Good habitat., No stereo camera 
+
+19:43 shell
+
+#### Transect 4 (19-345D) 
+**Start time:**  20:02**End time:**  20:30
+**Pilot:**   K. Stierhoff  
+**Location:**   SHOBA (30-40 m)  
+**Notes/observations:**  : Started with sand bottom, Sand bottom with lots of elk horn kelp. Good rocky habitat with sand channels. Caught in kelp and picked up early.  
+
+#### Transect 5 (19-0345E) 
+**Start time:**  21:14 **End time:**  21:57  
+**Pilot:**  D. Murfin  
+**Location:**  MTR-2 (40-50 m)
+**Notes/observations:**  Ended after leaving rocky habitat and depth dropping-off.
+21:16 White abalone shell
+21:22 Abalone shell
+
+#### Transect 6 (19-345F) 
+**Start time:**  22:39 **End time:** 23:09
+**Pilot:**  S. Mau  
+**Location**:  MTR-2 (50-60 m)  
+**Notes/observations:**  Good habitat mixed with some high-relief rocks.
+
+#### Transect 7 (19-345G) 
+**Start time:**  23:53 **End time:**  00:14 (11 December)
+**Pilot:**  K. Stierhoff  
+**Location:**  MTR-2 (30-40 m)
+
+**Notes/observations:** 
+Good habitat, lots of algae, elk horn kelp make it difficult to drive.
+Endend early do to lots of elk horn kelp
+
+* End of operations for Day 1. Moored off Pyramid Cove overnight.
+
+### Day 2 - San Clemente Island (12 December)
+
+#### Transect 8 (19-346A) 
+**Start time:**  16:06 **End time:**  16:28
+**Pilot:**  D. Murfin  
+**Location:**  SHOBA (30-40 m)
+
+**Notes/observations:** 
+Low relief rocks within sand. 
+
+#### Transect 9 (19-346B) 
+**Start time:**  17:23 **End time:**  17:58
+**Pilot:** S. Mau  
+**Location:**  SHOBA (30-40 m)
+
+**Notes/observations:** 
+Low relief rocks within sand. Seemingly good abalone habitat with some empty shells. Two giant seabass. Lost control of tilt tray on deck.
+
+**Tech Note:** _Tilt tray motor became inoperable due to water intrusion. Motor housing was cleaned, 0-rings replaced, and motor swapped. New motor has less power and moves slower. A new motor that matches the old must be purchased._  
+
+#### Transect 10 (19-346C) 
+**Start time:**  21:35 **End time:**  22:16
+**Pilot:** K. Stierhoff  
+**Location:**  SHOBA (50-60 m)
+
+**Notes/observations:** 
+Rock with large sand channels, lots of low relief reef with sand.
+
+#### Transect 11 (19-346D) 
+**Start time:**  23:05 **End time:** 23:38
+**Pilot:** D. Murfin  
+**Location:**  SHOBA (40-50 m)
+
+#### Transect 12 (19-346E) 
+**Start time:**  00:19 **End time:** XX:XX
+**Pilot:** S. Mau  
+**Location:**  SHOBA (50-60 m)
+
+* End of operations for Day 1. Moored off SE end of island overnight.  
+
+### Day 3 - San Clemente Island (13 December)
+#### Transect 13 (19-347A) 
+**Start time:** 15:11 **End time:** 15:20
+**Pilot:** K. Stierhoff  
+**Location:**  SHOBA (30-40 m)
+
+**Notes/observations:** 
+Lower visibility (lots of particulates in water) and surge, with lots of elk horn kelp (_Pelagophycus_). Ended transect early due to inability to search on the bottom.  
+
+#### Transect 14 (19-347B) 
+**Start time:** XX:XX **End time:** XX:XX
+**Pilot:** D. Murfin  
+**Location:**  SHOBA (50-60 m)
+
+**Notes/observations:** 
+Large boulders and rock among lots of sand. Some empty abalone shells. Long transect duration.
+
+#### Transect 15 (19-347C) 
+**Start time:** 18:10 **End time:** XX:XX
+**Pilot:** S. Mau 
+**Location:**  SHOBA (50-60 m)
+
+**Notes/observations:** 
+Nice habitat, a few shells.
+
+#### Transect 16 (19-347D) 
+**Start time:** 19:38 **End time:** 19:51
+**Pilot:** K. Stierhoff  
+**Location:**  SHOBA (40-50 m)
+
+**Notes/observations:** 
+Low visibility with lots of surge, ended transect early due to strong surge, poor visibility, and kelp.
+
+* End of operations for Day 3, and end of Leg 1. Departed for Mission Bay at 20:00.
+
+## Leg 2
+
+* Departed Seaforth Landing at 05:00 (check; 9pm PST) on 17 December, and arrived at SWAT-1 at 15:00. Seas were calm but Santa Ana winds were stiff and gusting to 20-25 kn. It was determined that maneuvering the vessel would be difficult to impossible, so we moved south toward SWAT-4, where winds were somewhat more calm.
+
+### Day 4 - San Clemente Island (17 December)
+#### Transect 17 (19-351A) 
+**Start time:** 16:13 **End time:** XX:XX
+**Pilot:** D. Murfin  
+**Location:**  SWAT-4 (50-60 m m)
+
+**Notes/observations:** 
+A lot of sand at the beginning of transect. First encountered hard substrate (boulders) at 16:20. Fishing gear in the water column at 16:22. **No navigation data recorded in WinFrog. Do not include in analysis.**
+
+#### Transect 18 (19-351B) 
+**Start time:** 18:17 **End time:** 18:59
+**Pilot:** S.Mau   
+**Location:**  SWAT-1 (40-50 m)
+
+**Notes/observations:** 
+Lots of good abalone habitat and empty shells. Sand channels with _Laminaria_. 
+
+18:19 abundant abalone shells
+
+#### Transect 19 (19-351C) 
+**Start time:** 19:42 **End time:** 20:13
+**Pilot:** K. Stierhoff  
+**Location:**  SWAT-1 (50-60 m)
+
+**Notes/observations:** 
+Good habitat with lots of shells, lots of 45 meter reef.
+
+#### Transect 20 (19-351D) 
+**Start time:** 20:58 **End time:** 21:53
+**Pilot:** D. Murfin  
+**Location:**  SWAT-1 (50-60 m)
+
+**Notes/observations:** 
+More good habitat. More _Laminaria_ with some _Pelagophycus_.
+
+#### Transect 21 (19-351E) 
+**Start time:** 22:30 **End time:** 23:04
+**Pilot:** S. Mau  
+**Location:**  SWAT-1 (50-60 m)
+
+**Notes/observations:** 
+Lots of boulders and some sand. Not much kelp at start.
+
+#### Transect 22 (19-351F) 
+**Start time:** 23:38 **End time:** 00:24
+**Pilot:** K. Stierhoff  
+**Location:**  SWAT-1 (30-40 m)
+
+**Notes/observations:** 
+Habitat not to bad, lots of _Pelagophycus_, _Eisenia_,
+
+
+#### Transect 23 (19-351G) 
+**Start time:** 01:14 **End time:** 01:54
+**Pilot:** D. Murfin  
+**Location:**  MTR-1 (50-60 m)
+
+**Notes/observations:** 
+Sand with coraline algae covered rocks, _Laminaria_, Multipal abalone shells, bouldery reef.
+
+* End of operations for Day 4. Moored off NE end of San Clemente Island overnight.
+
+### Day 5 - San Clemente Island (18 December)
+#### Transect 24 (19-352A) 
+**Start time:** 15:51 **End time:** 16:22
+**Pilot:** S. Mau  
+**Location:**  SWAT-1 (40-50 m)
+
+**Notes/observations:** 
+Ok habitat, had tether caught in line and recovered early, no stereo cam., no ctd data do to loose plug, used USBL data for depth.
+.
+#### Transect 25 (19-352B) 
+**Start time:** 18:04 **End time:** 18:46
+**Pilot:** K. Stierhoff  
+**Location:**  SWAT-1 (40-50 m)
+
+**Notes/observations:** 
+boldery and cobbley, _Laminaria_, _Eisenia_, CTD working, video dropping out, 
+
+
+#### Transect 26 (19-352C) 
+**Start time:** 19:27 **End time:** 20:06
+**Pilot:** D. Murfin  
+**Location:**  SWAT-1 (50-60 m)
+
+**Notes/observations:** 
+Boulder and cobble habitat with a little kelp. Great visibility and conditions.
+
+
+#### Transect 27 (19-352D) 
+**Start time:** 20:54 **End time:** 21:36
+**Pilot:** S. MAU
+**Location:**  SWAT-1 (40-50 m)
+
+**Notes/observations:** 
+Decent Looking Habitat. Low Relief Reef with sand patches.
+Many Abalone shells present.
+
+#### Transect 28 (19-352E) 
+**Start time:** 23:00 **End time:** 23:32
+**Pilot:** K. Stierhoff  
+**Location:**  SWAT-1 (50-60 m)
+
+**Notes/observations:** 
+High relief reef, boulders.
+
+
+#### Transect 29 (19-342F) 
+**Start time:** 00:06 (19 December) **End time:** 00:00:59
+**Pilot:** D. Murfin  
+**Location:**  SWAT-1 (40-50 m)
+
+**Notes/observations:** 
+Better habitat, cobble and small/medium boulders. Some _Laminaria_ and encrusting algae. 
+
+00:25 Relatively recent white abalone shell in the sand.
+00:44 White abalone shell.
+
+* End of operations for Day 5. Moored off NE end of San Clemente Island overnight.
+
+### Day 6 - San Clemente Island (19 December)
+
+#### Transect 30 (19-353A) 
+**Start time:** 15:57 **End time:** XX:XX
+**Pilot:** S. Mau  
+**Location:**  SWAT-4 (40-50 m)
+
+**Notes/observations:** 
+some video issues to start. twisted the fiber connector to rattler and it improved. contorl system wouldn't conntect at first had to restart control computer. no abalone where abalone were once observed.
+
+#### Transect 31 (19-353B) 
+**Start time:** 16:53 **End time:** 17:21
+**Pilot:** K. Stierhoff  
+**Location:**  SWAT-4 (40-50 m)
+
+**Notes/observations:**
+Good habitat.  We searched over a location where an abalone was found in 2012,
+but did not find the animal.
+
+#### Transect 32 (19-353C) 
+**Start time:** 17:58 **End time:** XX:XX
+**Pilot:** D. Murfin
+**Location:**  SWAT-4 (40-50 m)
+
+**Notes/observations:** 
+good habitat, we searched for an abalone at a location where one was seen 
+in 2016, but did not find the animal.
+
+#### Transect 33 (19-353D) 
+**Start time:** 19:36 **End time:** 20:20
+**Pilot:** S. Mau
+**Location:**  SWAT-6  (40-50 m)
+
+**Notes/observations:** 
+sand to start. sand with few rocks and low relief reef
+
+#### Transect 34 (19-353E) 
+**Start time:** 21:05 **End time:** 21:54
+**Pilot:** K. Stierhoff
+**Location:**  SWAT-6 (40-50 m)
+
+**Notes/observations:** 
+large rock formations with low relief reef on top.
+
+21:25 Live pink abalone (_H. corrugata_). Verified with photos.
+
+#### Transect 35 (19-353F) 
+**Start time:** 22:32 **End time:** XXXX
+**Pilot:** D. Murfin
+**Location:**  SWAT-6 (40-50 m)
+
+**Notes/observations:** 
+Swell and wind building. More surge and deteriorating visibility on the seabed. Sandy at start of dive.
+
+
+* End of operations for Day 6, and end of Leg 2. Departed for Mission Bay at XXXX.
+
+## Leg 3
+
+Departure TBD.
