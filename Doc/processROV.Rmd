@@ -1,0 +1,30 @@
+---
+title: "processROV"
+author: "Kevin L. Stierhoff"
+date: "2/6/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+# Install and load pacman (library management package)
+if (!require("pacman")) install.packages("pacman")
+
+# Install and load required packages from CRAN ---------------------------------
+pacman::p_load(tidyverse,lubridate,here,RODBC,forecast,cowplot,exifr,sf,fs)
+
+# Install and load required packages from Github -------------------------------
+# surveyR
+pacman::p_load_gh("kstierhoff/surveyR")
+```
+
+# Load settings
+
+# Copy files
+
+# Process nav files
+
+# Process photos
+
+# Plot results
+
+# Export results
