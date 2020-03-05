@@ -18,6 +18,9 @@ pacman::p_load_gh("kstierhoff/surveyR")
 
 # Set default ggplot2 theme
 theme_set(theme_bw())
+
+# Create required directories
+dir_create(here(c("Data","Figs","Output")))
 ```
 
 # Load user settings
@@ -695,7 +698,6 @@ if (process.files) {
                  height = 9.8, width = 13.3, units = "in")
         }
       }
-    
   }
   
   # Create a vector of processed directories
