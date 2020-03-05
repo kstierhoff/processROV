@@ -4,5 +4,7 @@
 .Ruserdata
 *.accdb
 *.html
-Data/*
+Data/NAVDATA/*
+Data/PHOTOS/*
 Figs/*
+Output/*

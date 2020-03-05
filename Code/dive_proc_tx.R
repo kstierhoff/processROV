@@ -352,226 +352,226 @@ for (i in dir.list) {
   #          height = 5, width = 10, units = "in")
   # }
   
-  # Process WinFrog events from LOG file ####
-  log.info <- file.info(file.path(i,'logs.LOG'))
+  # # Process WinFrog events from LOG file ####
+  # log.info <- file.info(file.path(i, 'logs.LOG'))
+  # 
+  # if (log.info$size == 0) {
+  #   # If the LOG file is empty, do nothing
+  #   cat(paste("Log file for",dive.name,"is empty.\n"))
+  # } else {
+  #   # Else, process the LOG file
+  #   LOG <- read.csv(file.path(i, "logs.LOG"), header = F)
+  #   LOG <- LOG[ ,c(1,3:11,46:53)]
+  #   names(LOG) <- c("comment","date_time","lat_r","long_r","depth","heading_r","cmg_r","speed_r","northing_r","easting_r",
+  #                   "lat_s","long_s","depth_s","heading_s","cmg_s","speed_s","northing_s","easting_s")
+  #   
+  #   # create nav_id and object_id
+  #   LOG <- LOG %>% 
+  #     mutate(event_id  = seq(event.seed,event.seed + nrow(LOG) - 1, 1),
+  #            object_id = seq(1, nrow(LOG),1),
+  #            dive_name = dive.name,
+  #            date_time = as.POSIXct(date_time,format = "%m-%d-%y %H:%M:%OS"), # 04-17-12 21:45:57.2
+  #            lat_r     = winfrog2dd(lat_r),
+  #            long_r    = winfrog2dd(long_r),
+  #            lat_s     = winfrog2dd(lat_s),
+  #            long_s    = winfrog2dd(long_s))
+  #   
+  #   # sync log and nav datetimes
+  #   for (kk in 1:nrow(LOG)) {
+  #     # calculate the time difference between jth video obs and each nav record
+  #     time.diff	      <- abs(difftime(LOG$date_time[kk],DAT$date_time,units = "secs"))
+  #     LOG$nav_id[kk]	<- DAT$nav_id[which.min(time.diff)]
+  #     LOG$lag_s[kk] 	<- min(time.diff)
+  #     
+  #     # select nav data to output to the database
+  #     LOG.output <- LOG %>% 
+  #       select(event_id, nav_id, lag_s, dive_name, date_time, comment, lat_s, long_s, 
+  #              northing_s, easting_s, heading_s, cmg_s, speed_s,
+  #              lat_r, long_r, depth, northing_r, easting_r, heading_r, cmg_r, speed_r)
+  #     
+  #     LOG.write <- LOG.output 
+  #     LOG.write$date_time <- format(LOG.output$date_time,format = "%m/%d/%Y %H:%M:%S")
+  #     # write dive events to text file
+  #     write.csv(LOG.write,file = file.path(i, paste(dive.name,"DiveEvents.txt", sep = "_")), 
+  #               row.names = F, quote = F,na = "-999")
+  #     # add results to LOG.temp
+  #     LOG.temp <- rbind(LOG.temp,LOG.write)
+  #   }
+  # }
   
-  if (log.info$size == 0) {
-    # If the LOG file is empty, do nothing
-    cat(paste("Log file for",dive.name,"is empty.\n"))
-  } else {
-    # Else, process the LOG file
-    LOG <- read.csv(file.path(i, "logs.LOG"), header = F)
-    LOG <- LOG[ ,c(1,3:11,46:53)]
-    names(LOG) <- c("comment","date_time","lat_r","long_r","depth","heading_r","cmg_r","speed_r","northing_r","easting_r",
-                    "lat_s","long_s","depth_s","heading_s","cmg_s","speed_s","northing_s","easting_s")
-    
-    # create nav_id and object_id
-    LOG <- LOG %>% 
-      mutate(event_id  = seq(event.seed,event.seed + nrow(LOG) - 1, 1),
-             object_id = seq(1, nrow(LOG),1),
-             dive_name = dive.name,
-             date_time = as.POSIXct(date_time,format = "%m-%d-%y %H:%M:%OS"), # 04-17-12 21:45:57.2
-             lat_r     = winfrog2dd(lat_r),
-             long_r    = winfrog2dd(long_r),
-             lat_s     = winfrog2dd(lat_s),
-             long_s    = winfrog2dd(long_s))
-    
-    # sync log and nav datetimes
-    for (kk in 1:nrow(LOG)) {
-      # calculate the time difference between jth video obs and each nav record
-      time.diff	      <- abs(difftime(LOG$date_time[kk],DAT$date_time,units = "secs"))
-      LOG$nav_id[kk]	<- DAT$nav_id[which.min(time.diff)]
-      LOG$lag_s[kk] 	<- min(time.diff)
-      
-      # select nav data to output to the database
-      LOG.output <- LOG %>% 
-        select(event_id, nav_id, lag_s, dive_name, date_time, comment, lat_s, long_s, 
-               northing_s, easting_s, heading_s, cmg_s, speed_s,
-               lat_r, long_r, depth, northing_r, easting_r, heading_r, cmg_r, speed_r)
-      
-      LOG.write <- LOG.output 
-      LOG.write$date_time <- format(LOG.output$date_time,format = "%m/%d/%Y %H:%M:%S")
-      # write dive events to text file
-      write.csv(LOG.write,file = file.path(i, paste(dive.name,"DiveEvents.txt", sep = "_")), 
-                row.names = F, quote = F,na = "-999")
-      # add results to LOG.temp
-      LOG.temp <- rbind(LOG.temp,LOG.write)
-    }
-  }
+  # # Process photos to get metadata and sync with nav data ####
+  # photo.list <- dir(photo.root, recursive = F, pattern = "\\d{2}-\\d{3}\\w", full.names = T)
+  # p <- photo.list[grep(dive.name,photo.list)]
+  # 
+  # if (length(grep(dive.name,p)) > 0) { # if photos were taken, then the photo directory exists in photo.root
+  #   if (.Platform$OS.type == "unix") {
+  #     # apply time fix to each photo using ExifTool
+  #     # add or substract time from EXIF tags. e.g., -=Y:M:D h:m:s. Sign dictates plus or minus
+  #     # system(paste("exiftool -AllDates", timefix, " ", p, sep = ""), intern = T) 
+  #     exiftool_call(paste0("-AllDates", timefix, " ", p))
+  #   } else {
+  #     # apply time fix to each photo using ExifTool
+  #     # add or substract time from EXIF tags. e.g., -=Y:M:D h:m:s. Sign dictates plus or minus
+  #     # system(paste("C:/SOFTWARE/exiftool.exe -AllDates", timefix, " ", p, sep = ""), intern = T)
+  #     exiftool_call(paste0("-AllDates", timefix, " ", p))
+  #   }
+  #   
+  #   PHOTO <- read_exif(p, tags = c("filename","createdate"), recursive = T) %>% 
+  #     rename(filename = FileName) %>% 
+  #     mutate(
+  #       date_time = ymd_hms(CreateDate),
+  #       photo_id  = seq(photo.seed,photo.seed + length(date_time) - 1, 1),
+  #       dive_name = dive.name,
+  #       filepath  = paste("\\\\swc-storage1\\ROV\\PHOTOS", dive_name, filename, sep = "\\"),
+  #       nav_id    = NA,
+  #       lag_s     = NA,
+  #       comment   = NA)
+  #   
+  #   # sync photo and nav datetimes
+  #   for (jj in 1:nrow(PHOTO)) {
+  #     # calculate the time difference between jth video obs and each nav record
+  #     time.diff	<- abs(difftime(PHOTO$date_time[jj],DAT$date_time,units = "secs"))
+  #     PHOTO$nav_id[jj]	<- DAT$nav_id[which.min(time.diff)]
+  #     PHOTO$lag_s[jj] 	<- min(time.diff)
+  #   }
+  #   
+  #   # write PHOTO_INFO to a text file
+  #   PHOTO.output <- select(PHOTO, photo_id, nav_id, lag_s, dive_name, date_time, filename, filepath, comment)
+  #   
+  #   # create a duplicate df for writing to the database
+  #   PHOTO.write <- PHOTO.output %>% 
+  #     mutate(date_time = format(date_time, format = "%m/%d/%Y %H:%M:%S"))
+  #   
+  #   # format date/time to a database compatible format
+  #   PHOTO.write$date_time <- format(PHOTO.output$date_time,format = "%m/%d/%Y %H:%M:%S")
+  #   write.csv(PHOTO.write, file = file.path(i, paste(dive.name, "_PhotoInfo.txt", sep = "")),
+  #             quote = F, row.names = F, na = "-999")
+  #   
+  #   # add results to PHOTO.temp
+  #   PHOTO.temp <- rbind(PHOTO.temp,PHOTO.write)
+  # } else {
+  #   cat(paste("No photos to process for", dive.name, ".\n"))
+  # }
   
-  # Process photos to get metadata and sync with nav data ####
-  photo.list <- dir(photo.root, recursive = F, pattern = "\\d{2}-\\d{3}\\w", full.names = T)
-  p <- photo.list[grep(dive.name,photo.list)]
-  
-  if (length(grep(dive.name,p)) > 0) { # if photos were taken, then the photo directory exists in photo.root
-    if (.Platform$OS.type == "unix") {
-      # apply time fix to each photo using ExifTool
-      # add or substract time from EXIF tags. e.g., -=Y:M:D h:m:s. Sign dictates plus or minus
-      # system(paste("exiftool -AllDates", timefix, " ", p, sep = ""), intern = T) 
-      exiftool_call(paste0("-AllDates", timefix, " ", p))
-    } else {
-      # apply time fix to each photo using ExifTool
-      # add or substract time from EXIF tags. e.g., -=Y:M:D h:m:s. Sign dictates plus or minus
-      # system(paste("C:/SOFTWARE/exiftool.exe -AllDates", timefix, " ", p, sep = ""), intern = T)
-      exiftool_call(paste0("-AllDates", timefix, " ", p))
-    }
-    
-    PHOTO <- read_exif(p, tags = c("filename","createdate"), recursive = T) %>% 
-      rename(filename = FileName) %>% 
-      mutate(
-        date_time = ymd_hms(CreateDate),
-        photo_id  = seq(photo.seed,photo.seed + length(date_time) - 1, 1),
-        dive_name = dive.name,
-        filepath  = paste("\\\\swc-storage1\\ROV\\PHOTOS", dive_name, filename, sep = "\\"),
-        nav_id    = NA,
-        lag_s     = NA,
-        comment   = NA)
-    
-    # sync photo and nav datetimes
-    for (jj in 1:nrow(PHOTO)) {
-      # calculate the time difference between jth video obs and each nav record
-      time.diff	<- abs(difftime(PHOTO$date_time[jj],DAT$date_time,units = "secs"))
-      PHOTO$nav_id[jj]	<- DAT$nav_id[which.min(time.diff)]
-      PHOTO$lag_s[jj] 	<- min(time.diff)
-    }
-    
-    # write PHOTO_INFO to a text file
-    PHOTO.output <- select(PHOTO, photo_id, nav_id, lag_s, dive_name, date_time, filename, filepath, comment)
-    
-    # create a duplicate df for writing to the database
-    PHOTO.write <- PHOTO.output %>% 
-      mutate(date_time = format(date_time, format = "%m/%d/%Y %H:%M:%S"))
-    
-    # format date/time to a database compatible format
-    PHOTO.write$date_time <- format(PHOTO.output$date_time,format = "%m/%d/%Y %H:%M:%S")
-    write.csv(PHOTO.write, file = file.path(i, paste(dive.name, "_PhotoInfo.txt", sep = "")),
-              quote = F, row.names = F, na = "-999")
-    
-    # add results to PHOTO.temp
-    PHOTO.temp <- rbind(PHOTO.temp,PHOTO.write)
-  } else {
-    cat(paste("No photos to process for", dive.name, ".\n"))
-  }
-  
-  # Plot lat/lon data of the ROV, ship, and photos ####
-  # subset nav data for ship
-  ship <- select(DAT, lat_s, long_s) %>% 
-    mutate(vessel = "ship") %>% 
-    rename(lat = lat_s,
-                  long = long_s)
-  
-  # subset nav data for ROV
-  rov <- select(DAT, lat_r, long_r) %>% 
-    mutate(vessel = "ROV") %>% 
-    rename(lat = lat_r,
-                  long = long_r)
-  
-  ll.gg	<- rbind(ship,rov)
-  ll.p	<- ggplot(ll.gg, aes(x = long, y = lat, colour = vessel)) +
-    geom_path() + coord_map() + theme_bw() + labs(title = paste("Lat/Long data from ",dive.name,"\n", sep = "")) +
-    xlab("\nLongitude") + ylab("Latitude\n") + scale_colour_manual("Vessel", values = c("green","black"))
-  
-  ggsave(ll.p,filename = file.path(i, paste(dive.name,"LatLongData.png", sep = "_")))
+  # # Plot lat/lon data of the ROV, ship, and photos ####
+  # # subset nav data for ship
+  # ship <- select(DAT, lat_s, long_s) %>% 
+  #   mutate(vessel = "ship") %>% 
+  #   rename(lat = lat_s,
+  #                 long = long_s)
+  # 
+  # # subset nav data for ROV
+  # rov <- select(DAT, lat_r, long_r) %>% 
+  #   mutate(vessel = "ROV") %>% 
+  #   rename(lat = lat_r,
+  #                 long = long_r)
+  # 
+  # ll.gg	<- rbind(ship,rov)
+  # ll.p	<- ggplot(ll.gg, aes(x = long, y = lat, colour = vessel)) +
+  #   geom_path() + coord_map() + theme_bw() + labs(title = paste("Lat/Long data from ",dive.name,"\n", sep = "")) +
+  #   xlab("\nLongitude") + ylab("Latitude\n") + scale_colour_manual("Vessel", values = c("green","black"))
+  # 
+  # ggsave(ll.p,filename = file.path(i, paste(dive.name,"LatLongData.png", sep = "_")))
   
   
-  # Process CTD cast data ####
-  # list CTD files in directory
-  CTD.dir <- list.files(i, pattern = "\\d{2}-\\d{3}\\w{1}_(CTD.)(\\(\\d{3}-\\d{6}\\))?.DAT", full.names = T)
-  
-  if (length(CTD.dir) == 0) {
-    # If no CTD files are present, do nothing
-    cat(paste("No CTD casts to process for ", dive.name, ".\n", sep = ""))
-  } else {
-    # else process each CTD file
-    for (ii in CTD.dir) {
-      # Get CTD name
-      CTD.name <- str_extract(ii,'\\d{2}-\\d{3}\\w{1}_(CTD.)')
-      CTD <- read.csv(ii, header = F)
-      CTD <- CTD[ ,c(1:47,65)]
-      # add variable names to data frame
-      names(CTD) <- c("object_id","blank","date_time","lat_c","long_c","depth","northing_c","easting_c","blank","blank","blank",
-                      "heading_r","cmg_r","speed_r","blank","blank","blank","blank","blank","blank","blank","blank",
-                      "pitch","roll","temperature","conductivity","pressure","salinity","sound_vel","oxygen_conc",
-                      "oxygen_sat","altitude","blank","blank","lat_s","long_s","blank","northing_s","easting_s",
-                      "blank","blank","blank","heading_s","cmg_s","speed_s","blank","blank","blank")
-      
-      # remove variables with no data
-      CTD <- CTD[ ,names(CTD) != "blank"] %>% 
-        mutate(
-          ctd_id    = seq(ctd.seed,ctd.seed + length(date_time) - 1, 1), 
-          object_id = seq(1, length(date_time), 1),
-          ctd_name  = str_extract(ii, "\\d{2}-\\d{3}\\w{1}_(CTD.)"),
-          dive_name = dive.name,
-          date_time = as.POSIXct(date_time, format = "%m-%d-%y %H:%M:%OS"), # 04-17-12 21:45:57.2
-          lat_c     = winfrog2dd(lat_c),
-          long_c    = winfrog2dd(long_c),
-          lat_s     = winfrog2dd(lat_s),
-          long_s    = winfrog2dd(long_s),
-          time.int  = c(date_time[2:length(date_time)] - date_time[1:length(date_time) - 1], 0))
-      
-      # process CTD data
-      if (ctd.on == F) {  # If CTD not present, make data -999
-        CTD <- CTD %>% 
-          mutate(
-            sal           = -999,
-            conductivity  = -999,
-            oxygen_conc   = -999,
-            oxygen_sat    = -999,
-            depth_p_c     = depth,
-            pressure      = -999,
-            sound_vel     = -999,  
-            depth_msw_c   = depth)
-      } else {# Else, process CTD data and calculate oxygen saturation
-        # Calculate depth from pressure in SEAWATER (factors-in gravity and latitude)
-        CTD <- CTD %>% 
-          mutate(
-            depth         = calc_depth(lat_s, pressure),
-            depth_msw	    = depth - altitude,
-            oxygen_sat    = calc_sat(salinity, temperature, oxygen_conc))
-      }
-      
-      # select CTD data to output to the database
-      CTD.output <- CTD %>% 
-        select(ctd_id, object_id, dive_name, ctd_name, date_time, lat_c, long_c, 
-               depth, temperature, conductivity, pressure, salinity, sound_vel,
-               oxygen_conc, oxygen_sat) %>% 
-        mutate(date_time = format(date_time, format = "%m/%d/%Y %H:%M:%S"))
-      
-      # save CTD results to file					
-      write.csv(CTD.output, file = file.path(i, paste(CTD.name,".txt",sep = "")),
-                quote = F, row.names = F, na = "-999")
-      
-      # add CTD results to CTD.temp
-      CTD.temp <- rbind(CTD.temp, CTD.output)
-      
-      # increment CTD ID by one for next cast
-      ctd.seed <- max(CTD.output$ctd_id) + 1		
-      
-      # plot data from each CTD cast
-      CTD.gg <- select(CTD, object_id, temperature, salinity, oxygen_conc, sound_vel, depth) %>% 
-        rename(
-          "Temperature (C)" = temperature,
-          "Salinity (PSU)" = salinity,
-          "Oxygen Concentration (uMol)" = oxygen_conc,
-          "Sound Velocity (m/s)" = sound_vel,
-          Depth = depth) %>% 
-        gather(variable, value, -object_id, -Depth)
-      
-      ctd.p <- ggplot(CTD.gg,aes(x = value,y = Depth,colour = variable)) +
-        geom_path() + facet_wrap(~variable, nrow = 1, scales = "free_x") + 
-        scale_y_continuous("Depth (m)\n", lim = c(min(CTD.gg$Depth),0),expand = c(0,0)) + 
-        xlab("\nSensor Value") + 
-        theme_bw() +
-        theme(legend.position = "none",
-              strip.text.x = element_text(size = 12, face = "bold"),
-              strip.background = element_rect(fill = "white"),
-              panel.spacing = unit(1, "lines")) + 
-        ggtitle(paste("CTD profile for",CTD.name,"\n"))
-      
-      ggsave(ctd.p,filename = file.path(i,paste(CTD.name,".png", sep = "")),
-             height = 9.8, width = 13.3, units = "in")
-    }
-  }
+  # # Process CTD cast data ####
+  # # list CTD files in directory
+  # CTD.dir <- list.files(i, pattern = "\\d{2}-\\d{3}\\w{1}_(CTD.)(\\(\\d{3}-\\d{6}\\))?.DAT", full.names = T)
+  # 
+  # if (length(CTD.dir) == 0) {
+  #   # If no CTD files are present, do nothing
+  #   cat(paste("No CTD casts to process for ", dive.name, ".\n", sep = ""))
+  # } else {
+  #   # else process each CTD file
+  #   for (ii in CTD.dir) {
+  #     # Get CTD name
+  #     CTD.name <- str_extract(ii,'\\d{2}-\\d{3}\\w{1}_(CTD.)')
+  #     CTD <- read.csv(ii, header = F)
+  #     CTD <- CTD[ ,c(1:47,65)]
+  #     # add variable names to data frame
+  #     names(CTD) <- c("object_id","blank","date_time","lat_c","long_c","depth","northing_c","easting_c","blank","blank","blank",
+  #                     "heading_r","cmg_r","speed_r","blank","blank","blank","blank","blank","blank","blank","blank",
+  #                     "pitch","roll","temperature","conductivity","pressure","salinity","sound_vel","oxygen_conc",
+  #                     "oxygen_sat","altitude","blank","blank","lat_s","long_s","blank","northing_s","easting_s",
+  #                     "blank","blank","blank","heading_s","cmg_s","speed_s","blank","blank","blank")
+  #     
+  #     # remove variables with no data
+  #     CTD <- CTD[ ,names(CTD) != "blank"] %>% 
+  #       mutate(
+  #         ctd_id    = seq(ctd.seed,ctd.seed + length(date_time) - 1, 1), 
+  #         object_id = seq(1, length(date_time), 1),
+  #         ctd_name  = str_extract(ii, "\\d{2}-\\d{3}\\w{1}_(CTD.)"),
+  #         dive_name = dive.name,
+  #         date_time = as.POSIXct(date_time, format = "%m-%d-%y %H:%M:%OS"), # 04-17-12 21:45:57.2
+  #         lat_c     = winfrog2dd(lat_c),
+  #         long_c    = winfrog2dd(long_c),
+  #         lat_s     = winfrog2dd(lat_s),
+  #         long_s    = winfrog2dd(long_s),
+  #         time.int  = c(date_time[2:length(date_time)] - date_time[1:length(date_time) - 1], 0))
+  #     
+  #     # process CTD data
+  #     if (ctd.on == F) {  # If CTD not present, make data -999
+  #       CTD <- CTD %>% 
+  #         mutate(
+  #           sal           = -999,
+  #           conductivity  = -999,
+  #           oxygen_conc   = -999,
+  #           oxygen_sat    = -999,
+  #           depth_p_c     = depth,
+  #           pressure      = -999,
+  #           sound_vel     = -999,  
+  #           depth_msw_c   = depth)
+  #     } else {# Else, process CTD data and calculate oxygen saturation
+  #       # Calculate depth from pressure in SEAWATER (factors-in gravity and latitude)
+  #       CTD <- CTD %>% 
+  #         mutate(
+  #           depth         = calc_depth(lat_s, pressure),
+  #           depth_msw	    = depth - altitude,
+  #           oxygen_sat    = calc_sat(salinity, temperature, oxygen_conc))
+  #     }
+  #     
+  #     # select CTD data to output to the database
+  #     CTD.output <- CTD %>% 
+  #       select(ctd_id, object_id, dive_name, ctd_name, date_time, lat_c, long_c, 
+  #              depth, temperature, conductivity, pressure, salinity, sound_vel,
+  #              oxygen_conc, oxygen_sat) %>% 
+  #       mutate(date_time = format(date_time, format = "%m/%d/%Y %H:%M:%S"))
+  #     
+  #     # save CTD results to file					
+  #     write.csv(CTD.output, file = file.path(i, paste(CTD.name,".txt",sep = "")),
+  #               quote = F, row.names = F, na = "-999")
+  #     
+  #     # add CTD results to CTD.temp
+  #     CTD.temp <- rbind(CTD.temp, CTD.output)
+  #     
+  #     # increment CTD ID by one for next cast
+  #     ctd.seed <- max(CTD.output$ctd_id) + 1		
+  #     
+  #     # plot data from each CTD cast
+  #     CTD.gg <- select(CTD, object_id, temperature, salinity, oxygen_conc, sound_vel, depth) %>% 
+  #       rename(
+  #         "Temperature (C)" = temperature,
+  #         "Salinity (PSU)" = salinity,
+  #         "Oxygen Concentration (uMol)" = oxygen_conc,
+  #         "Sound Velocity (m/s)" = sound_vel,
+  #         Depth = depth) %>% 
+  #       gather(variable, value, -object_id, -Depth)
+  #     
+  #     ctd.p <- ggplot(CTD.gg,aes(x = value,y = Depth,colour = variable)) +
+  #       geom_path() + facet_wrap(~variable, nrow = 1, scales = "free_x") + 
+  #       scale_y_continuous("Depth (m)\n", lim = c(min(CTD.gg$Depth),0),expand = c(0,0)) + 
+  #       xlab("\nSensor Value") + 
+  #       theme_bw() +
+  #       theme(legend.position = "none",
+  #             strip.text.x = element_text(size = 12, face = "bold"),
+  #             strip.background = element_rect(fill = "white"),
+  #             panel.spacing = unit(1, "lines")) + 
+  #       ggtitle(paste("CTD profile for",CTD.name,"\n"))
+  #     
+  #     ggsave(ctd.p,filename = file.path(i,paste(CTD.name,".png", sep = "")),
+  #            height = 9.8, width = 13.3, units = "in")
+  #   }
+  # }
   
   # Calculate and report new indices for next transect ####
   # Calculate next nav_id
