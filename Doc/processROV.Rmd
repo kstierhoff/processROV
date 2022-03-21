@@ -76,8 +76,8 @@ if (.Platform$OS.type == "unix") {
   photo.root 	<- "/Users/kevinstierhoff/PHOTOS" # This is the photo directory
 } else { 
   # if working on a Windows PC
-  dat.root 	<- "C:/NAVDATA" # This is the WinFrog project directory
-  photo.root 	<- "C:/PHOTOS"#  This is the photo directory
+  dat.root 	<- "C:/ROV_DATA/NAVDATA" # This is the WinFrog project directory
+  photo.root 	<- "C:/ROV_DATA/PHOTOS"#  This is the photo directory
 }
 
 # Get a list of WinFrog project directories that contain NAV data
@@ -567,141 +567,141 @@ if (process.files) {
       cat(paste("No photos to process for", dive.name, ".\n"))
       
     }
-      
-      # Plot lat/lon data of the ROV, ship, and photos -------------------
-      # Subset nav data for ship
-      ship <- select(DAT.tmp, lat_s, long_s) %>% 
-        mutate(vessel = "Sship") %>% 
-        rename(lat = lat_s,
-               long = long_s)
-      
-      # Subset nav data for ROV
-      rov <- select(DAT.tmp, lat_r, long_r) %>% 
-        mutate(vessel = "ROV") %>% 
-        rename(lat = lat_r,
-               long = long_r)
-      
-      ll.gg	<- bind_rows(ship, rov)
-      
-      ll.p	<- ggplot(ll.gg, aes(x = long, y = lat, colour = vessel)) +
-        geom_path() + 
-        coord_map() + 
-        labs(title = paste("Lat/Long data from ", dive.name,"\n", sep = "")) +
-        xlab("\nLongitude") + ylab("Latitude\n") + 
-        scale_colour_manual("Vessel", values = c("green","black"))
-      
-      ggsave(ll.p, filename = here("Figs", paste(dive.name, "LatLongData.png", sep = "_")))
-      
-      # Process CTD cast data --------------------------------------------
-      # list CTD files in directory
-      CTD.dir <- dir_ls(i, regexp = "\\d{2}-\\d{3}\\w{1}_(CTD.)(\\(\\d{3}-\\d{6}\\))?.DAT")
-      
-      if (length(CTD.dir) == 0) {
-        # If no CTD files are present, do nothing
-        cat(paste("No CTD casts to process for ", dive.name, ".\n", sep = ""))
-      } else {
-        # else process each CTD file
-        for (ii in CTD.dir) {
-          # Get CTD name
-          CTD.name <- str_extract(ii,'\\d{2}-\\d{3}\\w{1}_(CTD.)')
-          CTD.tmp <- read_csv(ii, col_names = FALSE)
-          CTD.tmp <- CTD.tmp[ , c(1:47,65)]
-          # Add variable names to data frame
-          names(CTD) <- c("object_id","blank","date_time","lat_c","long_c","depth","northing_c","easting_c",
-                          "blank","blank","blank",
-                          "heading_r","cmg_r","speed_r","blank","blank","blank","blank","blank","blank","blank","blank",
-                          "pitch","roll","temperature","conductivity","pressure","salinity","sound_vel","oxygen_conc",
-                          "oxygen_sat","altitude","blank","blank","lat_s","long_s","blank","northing_s","easting_s",
-                          "blank","blank","blank","heading_s","cmg_s","speed_s","blank","blank","blank")
-          
-          # remove variables with no data
-          CTD.tmp <- CTD.tmp[ , names(CTD.tmp) != "blank"] %>% 
+    
+    # Plot lat/lon data of the ROV, ship, and photos -------------------
+    # Subset nav data for ship
+    ship <- select(DAT.tmp, lat_s, long_s) %>% 
+      mutate(vessel = "Sship") %>% 
+      rename(lat = lat_s,
+             long = long_s)
+    
+    # Subset nav data for ROV
+    rov <- select(DAT.tmp, lat_r, long_r) %>% 
+      mutate(vessel = "ROV") %>% 
+      rename(lat = lat_r,
+             long = long_r)
+    
+    ll.gg	<- bind_rows(ship, rov)
+    
+    ll.p	<- ggplot(ll.gg, aes(x = long, y = lat, colour = vessel)) +
+      geom_path() + 
+      coord_map() + 
+      labs(title = paste("Lat/Long data from ", dive.name,"\n", sep = "")) +
+      xlab("\nLongitude") + ylab("Latitude\n") + 
+      scale_colour_manual("Vessel", values = c("green","black"))
+    
+    ggsave(ll.p, filename = here("Figs", paste(dive.name, "LatLongData.png", sep = "_")))
+    
+    # Process CTD cast data --------------------------------------------
+    # list CTD files in directory
+    CTD.dir <- dir_ls(i, regexp = "\\d{2}-\\d{3}\\w{1}_(CTD.)(\\(\\d{3}-\\d{6}\\))?.DAT")
+    
+    if (length(CTD.dir) == 0) {
+      # If no CTD files are present, do nothing
+      cat(paste("No CTD casts to process for ", dive.name, ".\n", sep = ""))
+    } else {
+      # else process each CTD file
+      for (ii in CTD.dir) {
+        # Get CTD name
+        CTD.name <- str_extract(ii,'\\d{2}-\\d{3}\\w{1}_(CTD.)')
+        CTD.tmp <- read_csv(ii, col_names = FALSE)
+        CTD.tmp <- CTD.tmp[ , c(1:47,65)]
+        # Add variable names to data frame
+        names(CTD) <- c("object_id","blank","date_time","lat_c","long_c","depth","northing_c","easting_c",
+                        "blank","blank","blank",
+                        "heading_r","cmg_r","speed_r","blank","blank","blank","blank","blank","blank","blank","blank",
+                        "pitch","roll","temperature","conductivity","pressure","salinity","sound_vel","oxygen_conc",
+                        "oxygen_sat","altitude","blank","blank","lat_s","long_s","blank","northing_s","easting_s",
+                        "blank","blank","blank","heading_s","cmg_s","speed_s","blank","blank","blank")
+        
+        # remove variables with no data
+        CTD.tmp <- CTD.tmp[ , names(CTD.tmp) != "blank"] %>% 
+          mutate(
+            ctd_id    = seq(ctd.seed, ctd.seed + n() - 1, 1), 
+            object_id = seq(1, n(), 1),
+            ctd_name  = str_extract(ii, "\\d{2}-\\d{3}\\w{1}_(CTD.)"),
+            dive_name = dive.name,
+            date_time = mdy_hms(date_time),
+            lat_c     = winfrog2dd(lat_c),
+            long_c    = winfrog2dd(long_c),
+            lat_s     = winfrog2dd(lat_s),
+            long_s    = winfrog2dd(long_s),
+            time.int  = c(date_time[2:length(date_time)] - date_time[1:length(date_time) - 1], 0))
+        
+        # Process CTD data
+        if (ctd.on == FALSE) {  
+          # If CTD not present, make data -999
+          CTD.tmp <- CTD.tmp %>% 
             mutate(
-              ctd_id    = seq(ctd.seed, ctd.seed + n() - 1, 1), 
-              object_id = seq(1, n(), 1),
-              ctd_name  = str_extract(ii, "\\d{2}-\\d{3}\\w{1}_(CTD.)"),
-              dive_name = dive.name,
-              date_time = mdy_hms(date_time),
-              lat_c     = winfrog2dd(lat_c),
-              long_c    = winfrog2dd(long_c),
-              lat_s     = winfrog2dd(lat_s),
-              long_s    = winfrog2dd(long_s),
-              time.int  = c(date_time[2:length(date_time)] - date_time[1:length(date_time) - 1], 0))
+              sal           = -999,
+              conductivity  = -999,
+              oxygen_conc   = -999,
+              oxygen_sat    = -999,
+              depth_p_c     = depth,
+              pressure      = -999,
+              sound_vel     = -999,  
+              depth_msw_c   = depth)
           
-          # Process CTD data
-          if (ctd.on == FALSE) {  
-            # If CTD not present, make data -999
-            CTD.tmp <- CTD.tmp %>% 
-              mutate(
-                sal           = -999,
-                conductivity  = -999,
-                oxygen_conc   = -999,
-                oxygen_sat    = -999,
-                depth_p_c     = depth,
-                pressure      = -999,
-                sound_vel     = -999,  
-                depth_msw_c   = depth)
-            
-          } else {
-            # Else, process CTD data and calculate oxygen saturation
-            # Calculate depth from pressure in SEAWATER (factors-in gravity and latitude)
-            CTD.tmp <- CTD.tmp %>% 
-              mutate(
-                depth         = calc_depth(lat_s, pressure),
-                depth_msw	    = depth - altitude,
-                oxygen_sat    = calc_sat(salinity, temperature, oxygen_conc))
-          }
-          
-          # select CTD data to output to the database
-          CTD.output <- CTD.tmp %>% 
-            select(ctd_id, object_id, dive_name, ctd_name, date_time, lat_c, long_c, 
-                   depth, temperature, conductivity, pressure, salinity, sound_vel,
-                   oxygen_conc, oxygen_sat) %>% 
-            mutate(date_time = format(date_time, format = "%m/%d/%Y %H:%M:%S"))
-          
-          # Save CTD results to file					
-          write_csv(CTD.output, file.path(i, paste0(CTD.name,".txt")), na = "-999")
-          
-          write_csv(CTD.output, here("Output", paste0(CTD.name,".txt")), na = "-999")
-          
-          # add CTD results to CTD.temp
-          CTD <- bind_rows(CTD, CTD.output)
-          
-          # increment CTD ID by one for next cast
-          ctd.seed <- max(CTD.output$ctd_id) + 1		
-          
-          # plot data from each CTD cast
-          CTD.gg <- select(CTD.tmp, object_id, temperature, salinity, oxygen_conc, sound_vel, depth) %>% 
-            rename(
-              "Temperature (C)"             = temperature,
-              "Salinity (PSU)"              = salinity,
-              "Oxygen Concentration (uMol)" = oxygen_conc,
-              "Sound Velocity (m/s)"        = sound_vel,
-              Depth                         = depth) %>% 
-            gather(variable, value, -object_id, -Depth)
-          
-          ctd.p <- ggplot(CTD.gg, aes(value, Depth, colour = variable)) +
-            geom_path() + 
-            facet_wrap(~variable, nrow = 1, scales = "free_x") + 
-            scale_y_continuous("Depth (m)\n", lim = c(min(CTD.gg$Depth), 0), expand = c(0,0)) + 
-            xlab("\nSensor Value") + 
-            theme(legend.position  = "none",
-                  strip.text.x     = element_text(size = 12, face = "bold"),
-                  strip.background = element_rect(fill = "white"),
-                  panel.spacing    = unit(1, "lines")) + 
-            ggtitle(paste("CTD profile for", CTD.name, "\n"))
-          
-          ggsave(ctd.p, filename = file.path(i, paste0(CTD.name, ".png")),
-                 height = 9.8, width = 13.3, units = "in")
-          
-          ggsave(ctd.p, filename = here("Figs", paste0(CTD.name, ".png")),
-                 height = 9.8, width = 13.3, units = "in")
+        } else {
+          # Else, process CTD data and calculate oxygen saturation
+          # Calculate depth from pressure in SEAWATER (factors-in gravity and latitude)
+          CTD.tmp <- CTD.tmp %>% 
+            mutate(
+              depth         = calc_depth(lat_s, pressure),
+              depth_msw	    = depth - altitude,
+              oxygen_sat    = calc_sat(salinity, temperature, oxygen_conc))
         }
+        
+        # select CTD data to output to the database
+        CTD.output <- CTD.tmp %>% 
+          select(ctd_id, object_id, dive_name, ctd_name, date_time, lat_c, long_c, 
+                 depth, temperature, conductivity, pressure, salinity, sound_vel,
+                 oxygen_conc, oxygen_sat) %>% 
+          mutate(date_time = format(date_time, format = "%m/%d/%Y %H:%M:%S"))
+        
+        # Save CTD results to file					
+        write_csv(CTD.output, file.path(i, paste0(CTD.name,".txt")), na = "-999")
+        
+        write_csv(CTD.output, here("Output", paste0(CTD.name,".txt")), na = "-999")
+        
+        # add CTD results to CTD.temp
+        CTD <- bind_rows(CTD, CTD.output)
+        
+        # increment CTD ID by one for next cast
+        ctd.seed <- max(CTD.output$ctd_id) + 1		
+        
+        # plot data from each CTD cast
+        CTD.gg <- select(CTD.tmp, object_id, temperature, salinity, oxygen_conc, sound_vel, depth) %>% 
+          rename(
+            "Temperature (C)"             = temperature,
+            "Salinity (PSU)"              = salinity,
+            "Oxygen Concentration (uMol)" = oxygen_conc,
+            "Sound Velocity (m/s)"        = sound_vel,
+            Depth                         = depth) %>% 
+          gather(variable, value, -object_id, -Depth)
+        
+        ctd.p <- ggplot(CTD.gg, aes(value, Depth, colour = variable)) +
+          geom_path() + 
+          facet_wrap(~variable, nrow = 1, scales = "free_x") + 
+          scale_y_continuous("Depth (m)\n", lim = c(min(CTD.gg$Depth), 0), expand = c(0,0)) + 
+          xlab("\nSensor Value") + 
+          theme(legend.position  = "none",
+                strip.text.x     = element_text(size = 12, face = "bold"),
+                strip.background = element_rect(fill = "white"),
+                panel.spacing    = unit(1, "lines")) + 
+          ggtitle(paste("CTD profile for", CTD.name, "\n"))
+        
+        ggsave(ctd.p, filename = file.path(i, paste0(CTD.name, ".png")),
+               height = 9.8, width = 13.3, units = "in")
+        
+        ggsave(ctd.p, filename = here("Figs", paste0(CTD.name, ".png")),
+               height = 9.8, width = 13.3, units = "in")
       }
+    }
   }
   
   # Create a vector of processed directories
-  processed.dat <- unique(file.path(dat.root, DAT.tmp$dive_name))
+  processed.dat <- unique(file.path(dat.root, DAT$dive_name))
 }
 ```
 
@@ -709,7 +709,7 @@ if (process.files) {
 
 Extract metadata (exif information) from still photos for each transect. Optionally, to speed processing, only newly added files may be processed (`process.all` = `TRUE`).
 
-```{r process-photos}
+```{r process-photos, eval=FALSE}
 if (process.files) {
   if (process.files.all) {
     PHOTO.temp <- data.frame()
@@ -724,13 +724,105 @@ if (process.files) {
 # Plot results
 
 ```{r plot-results}
+# Create shapefiles of dive tracks
+transects <- DAT %>% 
+  st_as_sf(coords = c("long_r","lat_r"), crs = 4326) %>% 
+  group_by(dive_name) %>% 
+  summarise(do_union = F) %>% 
+  st_cast("LINESTRING") 
 
+st_write(transects, here("Output", paste(dir.start, dir.end, "Transects.shp", sep = "_")), 
+         delete_layer = TRUE)
 ```
 
 
 # Export results
 
 ```{r export-results}
+# Create output directories
+dir_create(here("Output/_Results"), c("CameraData","PhysData","CTD_Casts","NavData","LatLongData"))
 
+# Copy plots to Results directory
+# Camera data
+file_copy(dir_ls(here("Data/NAVDATA"), regexp = "*CameraData.png", recurse = TRUE),
+          here("Output/_Results/CameraData"),
+          overwrite = TRUE)
+# CTD data
+file_copy(dir_ls(here("Data/NAVDATA"), regexp = "*CTD.png", recurse = TRUE),
+          here("Output/_Results/CTD_Casts"),
+          overwrite = TRUE)
+# LatLong data
+file_copy(dir_ls(here("Data/NAVDATA"), regexp = "*LatLongData.png", recurse = TRUE),
+          here("Output/_Results/LatLongData"),
+          overwrite = TRUE)
+# Nav data
+file_copy(dir_ls(here("Data/NAVDATA"), regexp = "*NavData.png", recurse = TRUE),
+          here("Output/_Results/NavData"),
+          overwrite = TRUE)
+# Physical data
+file_copy(dir_ls(here("Data/NAVDATA"), regexp = "*PhysData.png", recurse = TRUE),
+          here("Output/_Results/PhysData"),
+          overwrite = TRUE)
+
+# Write NAV data for all dives to text file
+write_csv(DAT, file = here("Output/_Results", paste(dir.start, dir.end,"NavData.txt", sep = "_")),
+          na = "-999")
+
+# Write PHOTO data for all dives to text file
+if (nrow(PHOTO) > 0) {
+  write_csv(PHOTO, file = here("Output/_Results", paste(dir.start, dir.end,"PhotoInfo.txt", sep = "_")),
+          na = "-999")
+}
+
+# Write LOG data for all dives to text file
+if (nrow(LOG) > 0) {
+  write_csv(LOG, file = here("Output/_Results", paste(dir.start, dir.end,"DiveEvents.txt", sep = "_")),
+          na = "-999")
+}
+
+# Write CTD data for all dives to text file
+if (nrow(CTD) > 0) {
+  write_csv(DAT, file = here("Output/_Results", paste(dir.start, dir.end,"CTDCasts.txt", sep = "_")),
+          na = "-999")
+}
+```
+
+# Report new seeds
+
+```{r eval=FALSE}
+# Calculate and report new indices for next transect ####
+# Calculate next nav_id
+nav.seed <- max(DAT$nav_id) + 1	
+# Calculate next event_id
+if (log.info$size > 0) {
+  # if log file is not empty, increment the event seed by 1
+  event.seed <- max(LOG$event_id) + 1
+} else {
+  # else keep the same
+  event.seed <- event.seed
+}
+# Calculate next photo_id
+if (length(grep(dive.name, p)) > 0) {
+  # if the dive name is in the list of photo directories, increment the photo seed by 1
+  photo.seed <- max(PHOTO$photo_id) + 1
+} else {
+  # else keep the same
+  photo.seed <- photo.seed
+}
+# Calculate next ctd_id
+if (length(CTD.dir) > 0) {
+  # if CTD casts were performed, increment the CTD seed by 1
+  ctd.seed <- max(CTD$ctd_id) + 1
+} else {
+  # else keep the same
+  ctd.seed <- ctd.seed
+}
+
+# Report new indices for next dive ####
+cat(paste("Finished processing dives", dir.start, "to", dir.end, "\n", sep = " "),
+    paste("Next nav_id is  : ", nav.seed, "\n"),
+    paste("Next event_id is: ", event.seed, "\n"),
+    paste("Next photo_id is: ", photo.seed, "\n"),
+    paste("Next ctd_id is  : ", ctd.seed,"\n"), sep = "")
 ```
 

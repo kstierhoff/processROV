@@ -6,7 +6,7 @@ db.dir    <- here("Data", "ROV_atsea_20191209.accdb")
 # Dive information
 # If only processing one dive, dir.start and dir.end are the same
 dir.start 	<- "19-345A" # First dive
-dir.end 	  <- "19-345G" # Last dive
+dir.end 	  <- "19-352F" # Last dive
 dir.rm      <- c("19-351A") # List of dives to remove manually
 
 # Precision options
@@ -35,8 +35,8 @@ if (.Platform$OS.type == "unix") {
   photo.root 	<- "/Users/kevinstierhoff/PHOTOS" # This is the photo directory
 } else { 
   # if working on a Windows PC
-  dat.root 	<- "C:/NAVDATA" # This is the WinFrog project directory
-  photo.root 	<- "C:/PHOTOS"#  This is the photo directory
+  dat.root 	<- "C:/ROV_DATA/NAVDATA" # This is the WinFrog project directory
+  photo.root 	<- "C:/ROV_DATA/PHOTOS"#  This is the photo directory
 }
 
 # Interval for Loess smoother used to plot nav data

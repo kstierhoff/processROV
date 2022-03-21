@@ -573,91 +573,72 @@ for (i in dir.list) {
   #   }
   # }
   
-  # Calculate and report new indices for next transect ####
-  # Calculate next nav_id
-  nav.seed <- max(DAT$nav_id) + 1	
-  # Calculate next event_id
-  if (log.info$size > 0) {
-    # if log file is not empty, increment the event seed by 1
-    event.seed <- max(LOG$event_id) + 1
-  } else {
-    # else keep the same
-    event.seed <- event.seed
-  }
-  # Calculate next photo_id
-  if (length(grep(dive.name, p)) > 0) {
-    # if the dive name is in the list of photo directories, increment the photo seed by 1
-    photo.seed <- max(PHOTO$photo_id) + 1
-  } else {
-    # else keep the same
-    photo.seed <- photo.seed
-  }
-  # Calculate next ctd_id
-  if (length(CTD.dir) > 0) {
-    # if CTD casts were performed, increment the CTD seed by 1
-    ctd.seed <- max(CTD$ctd_id) + 1
-  } else {
-    # else keep the same
-    ctd.seed <- ctd.seed
-  }
-  # update the progress bar
-  info <- sprintf("%d%% done", round((j/length(dir.list))*100))
-  setWinProgressBar(pb, round((j/length(dir.list))*100), label = info)
-  # increment loop counter
-  j <- j + 1
-  # insert a new line in the console
-  cat("\n")
-}
-close(pb)
+#   # Calculate and report new indices for next transect ####
+#   # Calculate next nav_id
+#   nav.seed <- max(DAT$nav_id) + 1	
+#   # Calculate next event_id
+#   if (log.info$size > 0) {
+#     # if log file is not empty, increment the event seed by 1
+#     event.seed <- max(LOG$event_id) + 1
+#   } else {
+#     # else keep the same
+#     event.seed <- event.seed
+#   }
+#   # Calculate next photo_id
+#   if (length(grep(dive.name, p)) > 0) {
+#     # if the dive name is in the list of photo directories, increment the photo seed by 1
+#     photo.seed <- max(PHOTO$photo_id) + 1
+#   } else {
+#     # else keep the same
+#     photo.seed <- photo.seed
+#   }
+#   # Calculate next ctd_id
+#   if (length(CTD.dir) > 0) {
+#     # if CTD casts were performed, increment the CTD seed by 1
+#     ctd.seed <- max(CTD$ctd_id) + 1
+#   } else {
+#     # else keep the same
+#     ctd.seed <- ctd.seed
+#   }
+#   # update the progress bar
+#   info <- sprintf("%d%% done", round((j/length(dir.list))*100))
+#   setWinProgressBar(pb, round((j/length(dir.list))*100), label = info)
+#   # increment loop counter
+#   j <- j + 1
+#   # insert a new line in the console
+#   cat("\n")
+# }
+# close(pb)
 
-# Write NAV data for all dives to text file
-write.csv(DAT.temp,file = file.path(dat.root,"_Results", paste(start.dir,end.dir,"NavData.txt", sep = "_")),
-          row.names = F, quote = F, na = "-999")
+ 
 
-# Write PHOTO data for all dives to text file
-if (nrow(PHOTO.temp) > 0) {
-  write.csv(PHOTO.temp,file = file.path(dat.root,"_Results", paste(start.dir,end.dir,"PhotoInfo.txt", sep = "_")),
-            row.names = F,quote = F, na = "-999")
-}
+# # Copy plots to Results directory
+# file.copy(list.files(pattern = "*CameraData.png","C:/NAVDATA", recursive = T, full.names = T), 
+#           file.path(dat.root, "_Results", "CameraData"), overwrite = T)
+# file.copy(list.files(pattern = "*PhysData.png","C:/NAVDATA", recursive = T, full.names = T), 
+#           file.path(dat.root, "_Results", "PhysData"), overwrite = T)
+# file.copy(list.files(pattern = "*NavData.png","C:/NAVDATA", recursive = T, full.names = T), 
+#           file.path(dat.root, "_Results", "NavData"), overwrite = T)
+# file.copy(list.files(pattern = "*CTD.png","C:/NAVDATA", recursive = T, full.names = T), 
+#           file.path(dat.root, "_Results", "CTD_Casts"), overwrite = T)
+# file.copy(list.files(pattern = "*LatLonData.png","C:/NAVDATA", recursive = T, full.names = T), 
+#           file.path(dat.root, "_Results", "LatLonData"), overwrite = T)
 
-# Write LOG data for all dives to text file
-if (nrow(LOG.temp) > 0) {
-  write.csv(LOG.temp,file = file.path(dat.root,"_Results", paste(start.dir,end.dir,"DiveEvents.txt", sep = "_")),
-            row.names = F, quote  = F, na = "-999")
-}
-# Write CTD data for all dives to text file
-if (nrow(CTD.temp) > 0) {
-  write.csv(CTD.temp,file = file.path(dat.root,"_Results", paste(start.dir,end.dir,"CTDCasts.txt", sep = "_")),
-            row.names = F,quote = F,na = "-999")
-}
+# # Create shapefiles of dive tracks
+# transects <- DAT.temp %>% 
+#   st_as_sf(coords = c("long_r","lat_r"), crs = 4326) %>% 
+#   group_by(dive_name) %>% 
+#   summarise(do_union = F) %>% 
+#   st_cast("LINESTRING") 
+# 
+# st_write(transects, file.path(dat.root,"_Results", paste(start.dir, end.dir, "Transects.shp", sep = "_")), 
+#          delete_layer = TRUE)
 
-# Copy plots to Results directory
-file.copy(list.files(pattern = "*CameraData.png","C:/NAVDATA", recursive = T, full.names = T), 
-          file.path(dat.root, "_Results", "CameraData"), overwrite = T)
-file.copy(list.files(pattern = "*PhysData.png","C:/NAVDATA", recursive = T, full.names = T), 
-          file.path(dat.root, "_Results", "PhysData"), overwrite = T)
-file.copy(list.files(pattern = "*NavData.png","C:/NAVDATA", recursive = T, full.names = T), 
-          file.path(dat.root, "_Results", "NavData"), overwrite = T)
-file.copy(list.files(pattern = "*CTD.png","C:/NAVDATA", recursive = T, full.names = T), 
-          file.path(dat.root, "_Results", "CTD_Casts"), overwrite = T)
-file.copy(list.files(pattern = "*LatLonData.png","C:/NAVDATA", recursive = T, full.names = T), 
-          file.path(dat.root, "_Results", "LatLonData"), overwrite = T)
-
-# Create shapefiles of dive tracks
-transects <- DAT.temp %>% 
-  st_as_sf(coords = c("long_r","lat_r"), crs = 4326) %>% 
-  group_by(dive_name) %>% 
-  summarise(do_union = F) %>% 
-  st_cast("LINESTRING") 
-
-st_write(transects, file.path(dat.root,"_Results", paste(start.dir, end.dir, "Transects.shp", sep = "_")), 
-         delete_layer = TRUE)
-
-# Report new indices for next dive ####
-cat(paste("Finished processing dives", start.dir, "to", end.dir, "\n", sep = " "),
-    paste("Next nav_id is: ", nav.seed, "\n"),
-    paste("Next event_id is: ", event.seed, "\n"),
-    paste("Next photo_id is: ", photo.seed, "\n"),
-    paste("Next ctd_id is: ", ctd.seed,"\n"), sep = "")
+# # Report new indices for next dive ####
+# cat(paste("Finished processing dives", start.dir, "to", end.dir, "\n", sep = " "),
+#     paste("Next nav_id is: ", nav.seed, "\n"),
+#     paste("Next event_id is: ", event.seed, "\n"),
+#     paste("Next photo_id is: ", photo.seed, "\n"),
+#     paste("Next ctd_id is: ", ctd.seed,"\n"), sep = "")
 
 # End of script ####
