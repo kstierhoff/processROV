@@ -9,15 +9,16 @@ if (.Platform$OS.type == "unix") {
   dat.root 	<- "C:/ROV_DATA/NAVDATA" # This is the WinFrog project directory
   photo.root 	<- "C:/ROV_DATA/PHOTOS"#  This is the photo directory
 }
+
 # ROV database information
 db.source <- "Access" # Access or SQL
-db.dir    <- here("Data", "ROV_atsea_20191209.accdb")  
+db.dir    <- here("Data/ROV_atsea_20220321.accdb")  
 
 # Dive information
 # If only processing one dive, dir.start and dir.end are the same
-dir.start 	<- "19-345A" # First dive
-dir.end 	  <- "19-352F" # Last dive
-dir.rm      <- c("19-351A") # List of dives to remove manually
+dir.start 	<- "22-082A" # First dive
+dir.end 	  <- "22-087C" # Last dive
+dir.rm      <- c("19-351A","22-082A") # List of dives to remove manually
 
 # Precision options
 options(digits = 9)
