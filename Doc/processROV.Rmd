@@ -23,17 +23,6 @@ theme_set(theme_bw())
 dir_create(here(c("Data","Figs","Output")))
 ```
 
-# Load user settings
-
-User-defined settings control various processing steps and outputs.
-
-```{r user-settings}
-copy.files        <- T # Copy files from root directories
-process.files     <- T # Process files
-process.files.all <- T # Process all files, not only new ones
-process.photos    <- T # Process photos
-```
-
 # Load project settings
 
 Load the project-specific settings. The appropriate file is determined by the name of the directory containing the Rstudio project.  
