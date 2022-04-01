@@ -71,16 +71,17 @@ close(channel)
 
 ```{r get-directories}
 # Get a list of WinFrog project directories that contain NAV data
-d        <- sort(dir(dat.root, recursive = F, pattern = "\\d{2}-\\d{3}\\w", full.names = T))
+d <- dir_ls(dat.root, regexp = "\\d{2}-\\d{3}\\w")
+# Get a list of directories to process
 dir.list <- d[grep(dir.start, d):grep(dir.end, d)]
-dir_create(str_replace(dir.list, dat.root, here("Data/NAVDATA")))
-dir_create(str_replace(dir.list, dat.root, here("Data/PHOTOS")))
+# Manually remove directories to not be processed
+dir.list <- dir.list[!path_file(dir.list) %in% dir.rm]
 
 if (process.photos) {
   # Get a list of directories that contain photos
-  p          <- sort(dir(photo.root, recursive = F, pattern = "\\d{2}-\\d{3}\\w", full.names = T))
-  photo.list <- p[grep(dir.start, p):grep(dir.end, p)] 
-  dir_create(str_replace(photo.list, photo.root, here("Data/PHOTOS")))
+  p <- dir_ls(photo.root, regexp = "\\d{2}-\\d{3}\\w")
+  # Get a list of directories to process
+  photo.list <- p[path_file(p) %in% path_file(dir.list)] 
 }
 ```
 
@@ -91,12 +92,11 @@ Copy WinFrog navigation data and photos to a local directory for processing, lea
 ```{r copy-files}
 if (copy.files) {
   # Copy WinFrog files
-  dir_copy(dir.list, str_replace(dir.list, dat.root, here("Data/NAVDATA")),
-           overwrite = TRUE)
+  dir_copy(dir.list, here("Data/NAVDATA", path_file(dir.list)), overwrite = TRUE)
+
   if (process.photos) {
     # Copy photos
-    dir_copy(photo.list, str_replace(photo.list, photo.root, here("Data/PHOTOS")),
-             overwrite = TRUE)
+    dir_copy(photo.list, here("Data/PHOTOS", path_file(photo.list)), overwrite = TRUE)
   }
 }
 ```
@@ -113,7 +113,7 @@ if (process.files) {
   if (!process.files.all) {
     # Load already processed DAT file directories 
     if (file.exists(here("Output/processed_dat.rds"))) {
-      readRDS(here("Output/processed_dat.rds"))
+      processed.dat <- readRDS(here("Output/processed_dat.rds"))
     }
     
     # Load already processed nav data
@@ -468,6 +468,8 @@ if (process.files) {
       LOG.tmp <- LOG.tmp %>% 
         mutate(event_id  = seq(event.seed, event.seed + n() - 1, 1),
                object_id = seq(1, n(), 1),
+               nav_id    = NA_real_,
+               lag_s     = NA_real_,
                dive_name = dive.name,
                date_time = mdy_hms(date_time),
                lat_r     = winfrog2dd(lat_r),
@@ -481,14 +483,11 @@ if (process.files) {
       if (nrow(DAT.tmp) > 0) {
         # sync log and nav datetimes
         for (kk in 1:nrow(LOG.tmp)) {
-          # calculate the time difference between jth video obs and each nav record
+          # calculate the time difference between j-th video obs and each nav record
           time.diff	          <- abs(difftime(LOG.tmp$date_time[kk], DAT.tmp$date_time, units = "secs"))
           LOG.tmp$nav_id[kk]	<- DAT.tmp$nav_id[which.min(time.diff)]
           LOG.tmp$lag_s[kk] 	<- min(time.diff)
         }
-      } else {
-        LOG.tmp$nav_id	<- NA_real_
-        LOG.tmp$lag_s 	<- NA_real_
       }
       
       # select nav data to output to the database
@@ -532,6 +531,8 @@ if (process.files) {
           mutate(
             date_time = ymd_hms(CreateDate),
             photo_id  = seq(photo.seed, photo.seed + n() - 1, 1),
+            nav_id    = NA_real_,
+            lag_s     = NA_real_,
             dive_name = dive.name,
             filepath  = paste("\\\\swc-storage1\\ROV\\PHOTOS", dive_name, filename, sep = "\\"),
             nav_id    = NA,
@@ -549,10 +550,7 @@ if (process.files) {
             PHOTO.tmp$nav_id[jj]	<- DAT.tmp$nav_id[which.min(time.diff)]
             PHOTO.tmp$lag_s[jj] 	<- min(time.diff)
           }
-        } else {
-          PHOTO.tmp$nav_id	<- NA_real_
-          PHOTO.tmp$lag_s 	<- NA_real_
-        }
+        } 
         
         # Format for database import
         PHOTO.write <- select(PHOTO.tmp, photo_id, nav_id, lag_s, dive_name, 
@@ -598,6 +596,8 @@ if (process.files) {
         xlab("\nLongitude") + ylab("Latitude\n") + 
         scale_colour_manual("Vessel", values = c("green","black"))
       
+      ggsave(ll.p, filename = file.path(i, paste(dive.name, "LatLongData.png", sep = "_")))
+
       ggsave(ll.p, filename = here("Figs", paste(dive.name, "LatLongData.png", sep = "_")))
     }
     
@@ -711,22 +711,7 @@ if (process.files) {
   
   # Create a vector of processed directories
   processed.dat <- unique(file.path(dat.root, DAT$dive_name))
-}
-```
-
-# Process photos
-
-Extract metadata (exif information) from still photos for each transect. Optionally, to speed processing, only newly added files may be processed (`process.all` = `TRUE`).
-
-```{r process-photos, eval=FALSE}
-if (process.files) {
-  if (process.files.all) {
-    PHOTO.temp <- data.frame()
-    LOG.temp 	 <- data.frame()
-    CTD.temp 	 <- data.frame()
-  } else {
-    
-  }  
+  saveRDS(processed.dat, here("Output/processed_dat.rds"))
 }
 ```
 
@@ -749,7 +734,7 @@ st_write(transects, here("Output", paste(dir.start, dir.end, "Transects.shp", se
 
 ```{r export-results}
 # Create output directories
-dir_create(here("Output/_Results"), c("CameraData","PhysData","CTD_Casts","NavData","LatLongData"))
+dir_create(here("Output/_Results"), c("CameraData","CTD_Casts","LatLongData","PhysData","NavData"))
 
 # Copy plots to Results directory
 # Camera data

@@ -18,7 +18,7 @@ db.dir    <- here("Data/ROV_atsea_20220321.accdb")
 # If only processing one dive, dir.start and dir.end are the same
 dir.start 	<- "22-082A" # First dive
 dir.end 	  <- "22-087C" # Last dive
-dir.rm      <- c("19-351A","22-082A") # List of dives to remove manually
+dir.rm      <- NA # List of dives to remove manually; NA if none
 
 # Precision options
 options(digits = 9)
